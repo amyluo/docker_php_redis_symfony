@@ -1,0 +1,49 @@
+version: '3.4'
+
+services:
+  mariadb:
+    image: docker.io/bitnami/mariadb:10.6
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      - ALLOW_EMPTY_PASSWORD=yes
+      - MARIADB_USER=bn_myapp
+      - MARIADB_DATABASE=bitnami_myapp
+    volumes:
+      - mariadb_dbdata:/bitnami/mariadb/data
+  myapp:
+    image: docker.io/amyluo/docker_php_redis_symfony:8.1
+    ports:
+      - target: 8000
+        published: 8000
+        protocol: tcp
+        mode: host
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      - ALLOW_EMPTY_PASSWORD=yes
+      - SYMFONY_DATABASE_HOST=mariadb
+      - SYMFONY_DATABASE_PORT_NUMBER=3306
+      - SYMFONY_DATABASE_USER=bn_myapp
+      - SYMFONY_DATABASE_NAME=bitnami_myapp
+    volumes:
+      - ./my-project:/app
+    depends_on:
+      - mariadb
+
+  redis-json:
+    image: docker.io/redislabs/rejson:2.0.11
+    container_name: redis-json
+    ports:
+      - target: 6379
+        published: 6380
+        protocol: tcp
+        mode: host
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - redis_json_data:/data
+
+volumes:
+  mariadb_dbdata:
+    name: mariadb_dbdata
+  redis_json_data:
+    name: redis_json_data
